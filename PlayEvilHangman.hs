@@ -7,7 +7,6 @@ import System.Environment
 import System.IO
 import Data.Char
 
---playEvilHangman:: [String] -> Int -> Int -> Int
-playEvilHangman dictionary wordLength guessCount = do
+playEvilHangman dictionary wordLength guessCount debugMode = do
   putStr "it works"
-  putStr (show wordLength ++ show guessCount ++ show dictionary) -- DEBUG: Shows all inputs
+  --putStr (show wordLength ++ show guessCount ++ show dictionary) -- DEBUG: Shows all inputs
