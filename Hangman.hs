@@ -16,7 +16,6 @@ import PlayEvilHangman
 
 main = do
   -- Process: Check arguments, and if all input is good, play evilHangman in the proper mode
-  
   -- 1. Open Dictionary
   args <- getArgs
   fileExists <- doesFileExist $ getFileName args
@@ -31,20 +30,21 @@ main = do
     let dictionary = words dictContent
     
     -- 2. Check argument Validity
-    let validArgsMsg   = isValidArgs args dictionary
+    let validArgsMsg   = "" --isValidArgs args dictionary
     if (validArgsMsg)  == ""
     
     then do -- Good Arguments --Play Evil Hangman!!
       let wordLen      = getWordLen args
+      let shortenDic   = shortenDictionary dictionary wordLen
       let debugMode = checkDebugMode args
       if ((getGuessCount args) > 15)
       then do
         let guessCount = 15
         putStr "Number of guesses set to maximum of 15\n"
-        playEvilHangman dictionary wordLen guessCount debugMode--Play Evil Hangman!
+        playEvilHangman shortenDic wordLen guessCount --debugMode --Play Evil Hangman!
       else do
         let guessCount = (getGuessCount args)
-        playEvilHangman dictionary wordLen guessCount debugMode --Play Evil Hangman!
+        playEvilHangman shortenDic wordLen guessCount --debugMode --Play Evil Hangman!
       
     else do -- Bad Arguments -- Tell User
       putStr $ validArgsMsg ++ "Usage: ./Hangman dictionary name length of word number of guesses\n"
@@ -52,6 +52,14 @@ main = do
     
 
 -- Helper Functions: 
+
+
+--Create a list of words from dictionary with specified length
+shortenDictionary :: [String] -> Int -> [String]
+shortenDictionary [] wordLength = []
+shortenDictionary (x:xs) wordLength
+   | (length x) == wordLength =  x : shortenDictionary xs wordLength
+   | otherwise                =  shortenDictionary xs wordLength
 
 -- Checks the main program arguments and returns an error message if one of the inputs is not valid
 isValidArgs :: [String] -> [String]-> String
