@@ -20,7 +20,7 @@ playEvilHangman dictionary wordLength guessCount isDebugMode = do
   recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
   
   
-recursiveHangman :: [String] -> Int -> Int -> Bool -> [Char] -> [Int] -> String -> IO ()
+recursiveHangman :: [String] -> Int -> Int -> Bool -> [Char] -> [Int] -> IO ()
 recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord = do
   -- Show user current Game State Info
    -- step 1
@@ -45,27 +45,36 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
       if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
         then do -- Get the user to enter a new input
         putStrLn "\nError: Invalid Guess: Please choose a unique letter"
-        recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
+        recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord 
         else do
+	--TODO: Keegan, update guessedLetters with new character to view
         -- Step 6
+        -- Update familyPattern (TODO: Noah)
+        let newIndices = findAllIndices dictionary [inputChar]
+        let newFamilyPattern = findFamilyIndices newIndices dictionary [inputChar] 0
+        -- Step 7
         -- Partion dictionary with the inputChar (TODO: Noah)
         -- Create a newDict *important for step 9*
-        let newDict = ["new", "dictionary"]
-        -- Step 7
-        -- Update familyPattern (TODO: Noah)
+        let newDict = findLargestFamily newIndices dictionary [inputChar] 0
+        let lengthDict = length newDict
         -- step 8 update guessCount when input char is not in the dictionary
         let newGuessCount = if (not (charInDict inputChar newDict))
                             then guessCount - 1
                             else guessCount
-        -- step 9
+        -- step 9 Check if end of game
         when (newGuessCount == 0) (putStrLn "You're out of Guesses. Game Over")
-        -- step 10 
+	
+	--Below needs "-n" implementation, debug to see number of words possible
+        putStrLn ("Number of possible words: " ++ show lengthDict) 
+	
+        -- step 10 Need to go back with updated parameters
+        --recursiveHangman newDict wordLength newGuessCount isDebugMode guessedLetters newFamilyPattern
         putStrLn "got to this point."
 
 -- Helper Functions:
 --TODO FINISH ShowHangman
 showHangmanWord :: String -> [Char] -> [Int] -> String
-showHangmanWord hangmanWord guessedletters familyPattern = "fake hangman word"
+showHangmanWord hangmanWord guessedletters familyPattern = show guessedletters
 
 -- currDictFamilyCount (I think it is finished)
 currFamilyPatternCount :: [Int] -> Int
@@ -73,7 +82,7 @@ currFamilyPatternCount currPattern = length currPattern
 
 debugPrint :: Int -> Bool -> IO ()
 debugPrint patternCount isDebugMode = do
-  if isDebugMode then putStr (show patternCount) else (return ())
+  if isDebugMode then putStrLn (show patternCount) else (return ())
   
 charInDict :: Char -> [String] -> Bool
 charInDict _ [] = False
@@ -81,36 +90,55 @@ charInDict char (x:xs)
   | elem char x = True
   | otherwise   = charInDict char xs 
 
+
 {-
-
-	To find families:
-		1. Check the letter input
-		2. Check placement of letter in words
-		3. Combine words that have same placement
-
+	Finds the largest family to use 
+	Inputs the list of indices, the current family list,
+		the letter we are interested in, and the length
+		of each family at each indice. Start at length of 0
+	Ouputs the family that has the most number of words
 -}
+findLargestFamily :: [[Int]] -> [String] -> String -> Int-> [String]
+findLargsetFamily [] currFamily inputLetter currMost = []
+findLargestFamily (x:xs) [] inputLetter currMost = []
+findLargestFamily (x:xs) currFamily inputLetter currMost  
+   | (length $ findFamily currFamily x inputLetter) > currMost = findLargestFamily xs currFamily inputLetter (length (findFamily currFamily x inputLetter))
+   | (length $ findFamily currFamily x inputLetter) < currMost = findLargestFamily xs currFamily inputLetter currMost
+   | otherwise = findFamily currFamily x inputLetter
 
---Finds the words that belong to a family
+{-
+	Finds the indice for the family being currently used 
+	Inputs the list of indices, the current family list,
+		the letter we are interested in, and the length
+		of each family at each indice. Start at length of 0
+	Ouputs the indicie list of the family to be used
+-}
+findFamilyIndices :: [[Int]] -> [String] -> String -> Int-> [Int]
+findFamilyIndices [] currFamily inputLetter currMost = []
+findFamilyIndices (x:xs) [] inputLetter currMost = []
+findFamilyIndices (x:xs) currFamily inputLetter currMost  
+   | (length $ findFamily currFamily x inputLetter) > currMost = findFamilyIndices xs currFamily inputLetter (length (findFamily currFamily x inputLetter))
+   | (length $ findFamily currFamily x inputLetter) < currMost = findFamilyIndices xs currFamily inputLetter currMost
+   | otherwise = x
+
+{-
+	Finds all indecies of character in current dictionary/family
+	Inputs the current family/dictionary and the letter of interest
+	Outputs a list of all the indices in the family
+-}
+findAllIndices :: [String] -> String -> [[Int]]
+findAllIndices [] inputLetter = []
+findAllIndices (x:xs) inputLetter = (findLetterIndices x inputLetter) : findAllIndices xs inputLetter
+
+--Finds the words that belong to a family based on indecies
 findFamily :: [String] -> [Int] -> String -> [String]
 findFamily [] wordIndeces inputLetter = []
 findFamily (x:xs) wordIndeces inputLetter
    | (findLetterIndices x inputLetter) == wordIndeces = x : findFamily xs wordIndeces inputLetter
    | otherwise = findFamily xs wordIndeces inputLetter
 
---Find the words with contained letter in the dictionary
-findWords :: [String] -> Char -> [String]
-findWords [] guessLetter = []
-findWords [""] guessLetter = []
-findWords (x:xs) guessLetter =
-   filter ((\ x str -> elem x str) guessLetter) (x:xs)
-
---Find the words without contained letter in the dictionary
-findNoWords :: [String] -> Char -> [String]
-findNoWords [] guessLetter = []
-findNoWords [""] guessLetter = []
-findNoWords (x:xs) guessLetter = 
-   filter (not . (\ x str -> elem x str) guessLetter) (x:xs)
-
---Find family in dictionary
+--Find indices of guessed letter in current word
 findLetterIndices :: String -> String -> [Int]
 findLetterIndices input letter = findIndices (`elem` letter) input
+
+
