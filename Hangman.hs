@@ -41,10 +41,10 @@ main = do
       then do
         let guessCount = 15
         putStr "Number of guesses set to maximum of 15\n"
-        playEvilHangman shortenDic wordLen guessCount --debugMode --Play Evil Hangman!
+        playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
       else do
         let guessCount = (getGuessCount args)
-        playEvilHangman shortenDic wordLen guessCount --debugMode --Play Evil Hangman!
+        playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
       
     else do -- Bad Arguments -- Tell User
       putStr $ validArgsMsg ++ "Usage: ./Hangman dictionary name length of word number of guesses\n"
