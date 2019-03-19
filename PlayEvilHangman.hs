@@ -46,7 +46,7 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
     else do
       -- Get user selected letter as inputChar
       inputLine <- hGetLine stdin
-      let inputChar = head inputLine
+      let inputChar = if (inputLine == []) then ' ' else (head inputLine)
       if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
         then do -- Get the user to enter a new input
         putStrLn "\nError: Invalid Guess: Please choose a unique letter"
@@ -66,7 +66,7 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
                             else guessCount
         let newHangmanWord = makeHangmanWord hangmanWord inputChar newFamilyPattern
         -- step 9 Check if end of game
-        if (length dictionary == 1) then (putStrLn "You win!")
+        if (length dictionary == 1) && not(elem '-' newHangmanWord) then (putStrLn ("You win!" ++ newHangmanWord))
         else do
           if (newGuessCount == 0) then (putStrLn "You're out of Guesses. Game Over")
           --TODO more end game cases such as Winning and other checks for Loses
