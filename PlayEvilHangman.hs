@@ -68,7 +68,10 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
         -- step 9 Check if end of game
         if (length dictionary == 1) && not(elem '-' newHangmanWord) then (putStrLn ("You win!" ++ newHangmanWord))
         else do
-          if (newGuessCount == 0) then (putStrLn "You're out of Guesses. Game Over")
+          if (newGuessCount == 0)
+            then do
+            putStrLn "You're out of Guesses. Game Over"
+            putStrLn ("The correct word was: " ++ (head newDict))
           --TODO more end game cases such as Winning and other checks for Loses
           -- step 10 Need to go back with updated parameters
           else recursiveHangman newDict wordLength newGuessCount isDebugMode newGuessedLetters newFamilyPattern newHangmanWord
