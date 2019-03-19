@@ -7,7 +7,7 @@ import System.Directory
 import System.IO
 import Data.Char
 import PlayEvilHangman
-
+import Control.Monad (when)
 -- EvilHangman:
 -- Program Description
 -- Usage: "./Hangman dictFileName WordLength GuessCount [Optional] -n"
@@ -33,20 +33,15 @@ main = do
     let validArgsMsg   = "" --isValidArgs args dictionary
     if (validArgsMsg)  == ""
     
-    then do -- Good Arguments --Play Evil Hangman!!
+    then do -- Good Arguments from user --Play Evil Hangman!!
       let wordLen      = getWordLen args
       let shortenDic   = shortenDictionary dictionary wordLen
       let debugMode = checkDebugMode args
-      if ((getGuessCount args) > 15)
-      then do
-        let guessCount = 15
-        putStr "Number of guesses set to maximum of 15\n"
-        playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
-      else do
-        let guessCount = (getGuessCount args)
-        playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
-      
-    else do -- Bad Arguments -- Tell User
+      when ((getGuessCount args) > 15) (putStr "Number of guesses set to maximum of 15\n")
+      let guessCount = if ((getGuessCount args) > 15) then 15 else (getGuessCount args)
+      playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
+     
+    else do -- Bad Arguments -- Tell User they typed something wrong
       putStr $ validArgsMsg ++ "Usage: ./Hangman dictionary name length of word number of guesses\n"
     
     
