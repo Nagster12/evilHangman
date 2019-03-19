@@ -8,6 +8,7 @@ import System.IO
 import Data.Char
 import Control.Monad (when)
 import Data.List
+import Data.Ord
 
 -- playEvilHangman: The game begins! with the user selected options we will play evil hangman
 playEvilHangman :: [String] -> Int -> Int -> Bool -> IO ()
@@ -15,7 +16,7 @@ playEvilHangman dictionary wordLength guessCount isDebugMode = do
   -- Initial Conditions of variables
   let familyPattern = [1,3]
   let guessedLetters = []
-  let hangmanWord = makeDashList guessCount
+  let hangmanWord = makeDashList wordLength
   -- Iterate game state till game is over
   recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
   
@@ -55,15 +56,15 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
         -- Step 6
         -- Update familyPattern
         let newIndices = findAllIndices dictionary [inputChar]
-        let newFamilyPattern = findFamilyIndices newIndices dictionary [inputChar] 0
+        let newFamilyPattern = findCommon newIndices
         -- Step 7
         -- Partion dictionary with the inputChar --Creates a newDict *important for step 9*
-        let newDict = findLargestFamily newIndices dictionary [inputChar] 0
+        let newDict = findFamily dictionary newFamilyPattern [inputChar]
         -- step 8 update guessCount when input char is not in the dictionary
         let newGuessCount = if (not (charInDict inputChar newDict))
                             then guessCount - 1
                             else guessCount
-        let newHangmanWord = makeHangmanWord hangmanWord inputChar familyPattern
+        let newHangmanWord = makeHangmanWord hangmanWord inputChar newFamilyPattern
         -- step 9 Check if end of game
         if (length dictionary == 1) then (putStrLn "You win!")
         else do
@@ -106,16 +107,18 @@ charInDict char (x:xs)
 		of each family at each indice. Start at length of 0
 	Ouputs the family that has the most number of words
 -}
-findLargestFamily :: [[Int]] -> [String] -> String -> Int-> [String]
-findLargsetFamily [] currFamily inputLetter currMost = []
-findLargestFamily (x:xs) [] inputLetter currMost = []
-findLargestFamily (x:xs) [a] inputLetter currMost = [a]
-findLargestFamily (x:xs) currFamily inputLetter currMost  
-   | (length nextFamily) > currMost = findLargestFamily xs currFamily inputLetter (length nextFamily)
-   | (length nextFamily) < currMost = findLargestFamily xs currFamily inputLetter currMost
-   | otherwise = nextFamily
-   where nextFamily = (findFamily currFamily x inputLetter)
-   
+findLargestFamily :: [[Int]] -> [String] -> String -> [String]
+--findLargsetFamily [] currFamily inputLetter currMost = []
+--findLargestFamily (x) currFamily inputLetter = 
+findLargestFamily (x:y:xs) [a] inputLetter = [a]
+findLargestFamily (x:y:xs) currFamily inputLetter
+   | (length thisFamily) > (length nextFamily) = findLargestFamily (y:xs) currFamily inputLetter 
+   | otherwise = findLargestFamily (x:xs) currFamily inputLetter
+   where thisFamily = (findFamily currFamily x inputLetter)
+         nextFamily = (findFamily currFamily y inputLetter)
+
+findCommon xs = head . maximumBy (comparing length) . group . sort $ xs
+
 {-
 	Finds the indice for the family being currently used 
 	Inputs the list of indices, the current family list,
@@ -125,12 +128,12 @@ findLargestFamily (x:xs) currFamily inputLetter currMost
 -}
 findFamilyIndices :: [[Int]] -> [String] -> String -> Int-> [Int]
 findFamilyIndices [] currFamily inputLetter currMost = []
-findFamilyIndices (x:xs) [] inputLetter currMost = []
-findFamilyIndices (x:xs) currFamily inputLetter currMost  
+findFamilyIndices (x:y:xs) [] inputLetter currMost = []
+findFamilyIndices (x:y:xs) currFamily inputLetter currMost  
    | (length nextFamily) > currMost = findFamilyIndices xs currFamily inputLetter (length nextFamily)
-   | (length nextFamily) < currMost = findFamilyIndices xs currFamily inputLetter currMost
    | otherwise = x
    where nextFamily = (findFamily currFamily x inputLetter)
+
 {-
 	Finds all indecies of character in current dictionary/family
 	Inputs the current family/dictionary and the letter of interest
