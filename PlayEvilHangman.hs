@@ -39,42 +39,37 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
   when isDebugMode (putStrLn $ "Number of possible words: " ++ show (length dictionary)) -- only prints if in debug mode: "-n"
   -- step 5:
   -- Request user to guess for a letter
-  eof <- hIsEOF stdin
-  -- Check for eof
-  if eof 
-    then return ()
-    else do
       -- Get user selected letter as inputChar
-      inputLine <- hGetLine stdin
-      let inputChar = if (inputLine == []) then ' ' else (head inputLine)
-      if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
-        then do -- Get the user to enter a new input
-        putStrLn "\nError: Invalid Guess: Please choose a unique letter"
-        recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord 
-        else do
-        let newGuessedLetters = inputChar:guessedLetters
-        -- Step 6
-        -- Update familyPattern
-        let newIndices = findAllIndices dictionary [inputChar]
-        let newFamilyPattern = findCommon newIndices
-        -- Step 7
-        -- Partion dictionary with the inputChar --Creates a newDict *important for step 9*
-        let newDict = findFamily dictionary newFamilyPattern [inputChar]
-        -- step 8 update guessCount when input char is not in the dictionary
-        let newGuessCount = if (not (charInDict inputChar newDict))
-                            then guessCount - 1
-                            else guessCount
-        let newHangmanWord = makeHangmanWord hangmanWord inputChar newFamilyPattern
-        -- step 9 Check if end of game
-        if (length dictionary == 1) && not(elem '-' newHangmanWord) then (putStrLn ("You win!" ++ newHangmanWord))
-        else do
-          if (newGuessCount == 0)
-            then do
-            putStrLn "You're out of Guesses. Game Over"
-            putStrLn ("The correct word was: " ++ (head newDict))
-          --TODO more end game cases such as Winning and other checks for Loses
-          -- step 10 Need to go back with updated parameters
-          else recursiveHangman newDict wordLength newGuessCount isDebugMode newGuessedLetters newFamilyPattern newHangmanWord
+  inputLine <- hGetLine stdin
+  let inputChar = if (inputLine == []) then ' ' else (head inputLine)
+  if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
+  then do -- Get the user to enter a new input
+    putStrLn "\nError: Invalid Guess: Please choose a unique letter"
+    recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord 
+  else do
+    let newGuessedLetters = inputChar:guessedLetters
+    -- Step 6
+    -- Update familyPattern
+    let newIndices = findAllIndices dictionary [inputChar]
+    let newFamilyPattern = findCommon newIndices
+    -- Step 7
+    -- Partion dictionary with the inputChar --Creates a newDict *important for step 9*
+    let newDict = findFamily dictionary newFamilyPattern [inputChar]
+    -- step 8 update guessCount when input char is not in the dictionary
+    let newGuessCount = if (not (charInDict inputChar newDict))
+                        then guessCount - 1
+                        else guessCount
+    let newHangmanWord = makeHangmanWord hangmanWord inputChar newFamilyPattern
+    -- step 9 Check if end of game
+    if (length dictionary == 1) && not(elem '-' newHangmanWord) then (putStrLn ("You win! The word was: " ++ newHangmanWord))
+    else do
+      if (newGuessCount == 0)
+    then do
+      putStrLn "You're out of Guesses. Game Over"
+      putStrLn ("The correct word was: " ++ (head newDict))
+      --TODO more end game cases such as Winning and other checks for Loses
+      -- step 10 Need to go back with updated parameters
+    else recursiveHangman newDict wordLength newGuessCount isDebugMode newGuessedLetters newFamilyPattern newHangmanWord
 
 -- Helper Functions:
 --makeHangmanWord: arguments - hangmanWord inputChar familyPattern
@@ -102,45 +97,14 @@ charInDict char (x:xs)
   | elem char x = True
   | otherwise   = charInDict char xs 
 
-
-{-
-	Finds the largest family to use 
-	Inputs the list of indices, the current family list,
-		the letter we are interested in, and the length
-		of each family at each indice. Start at length of 0
-	Ouputs the family that has the most number of words
--}
-findLargestFamily :: [[Int]] -> [String] -> String -> [String]
---findLargsetFamily [] currFamily inputLetter currMost = []
---findLargestFamily (x) currFamily inputLetter = 
-findLargestFamily (x:y:xs) [a] inputLetter = [a]
-findLargestFamily (x:y:xs) currFamily inputLetter
-   | (length thisFamily) > (length nextFamily) = findLargestFamily (y:xs) currFamily inputLetter 
-   | otherwise = findLargestFamily (x:xs) currFamily inputLetter
-   where thisFamily = (findFamily currFamily x inputLetter)
-         nextFamily = (findFamily currFamily y inputLetter)
-
+--Function to find the most common index
 findCommon xs = head . maximumBy (comparing length) . group . sort $ xs
-
-{-
-	Finds the indice for the family being currently used 
-	Inputs the list of indices, the current family list,
-		the letter we are interested in, and the length
-		of each family at each indice. Start at length of 0
-	Ouputs the indices list of the family to be used
--}
-findFamilyIndices :: [[Int]] -> [String] -> String -> Int-> [Int]
-findFamilyIndices [] currFamily inputLetter currMost = []
-findFamilyIndices (x:y:xs) [] inputLetter currMost = []
-findFamilyIndices (x:y:xs) currFamily inputLetter currMost  
-   | (length nextFamily) > currMost = findFamilyIndices xs currFamily inputLetter (length nextFamily)
-   | otherwise = x
-   where nextFamily = (findFamily currFamily x inputLetter)
 
 {-
 	Finds all indecies of character in current dictionary/family
 	Inputs the current family/dictionary and the letter of interest
-	Outputs a list of all the indices in the family
+	Outputs a list of all the indices in
+    the family
 -}
 findAllIndices :: [String] -> String -> [[Int]]
 findAllIndices [] inputLetter = []
@@ -156,5 +120,3 @@ findFamily (x:xs) wordIndices inputLetter
 --Find indices of guessed letter in current word
 findWordIndices :: String -> String -> [Int]
 findWordIndices input letter = findIndices (`elem` letter) input
-
-
