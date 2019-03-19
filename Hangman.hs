@@ -35,16 +35,50 @@ main = do
     
     then do -- Good Arguments from user --Play Evil Hangman!!
       let wordLen      = getWordLen args
-      let shortenDic   = shortenDictionary dictionary wordLen
+      --let shortenDic   = shortenDictionary dictionary wordLen
       let debugMode = checkDebugMode args
       when ((getGuessCount args) > 15) (putStr "Number of guesses set to maximum of 15\n")
       let guessCount = if ((getGuessCount args) > 15) then 15 else (getGuessCount args)
-      playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
-     
+      --playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
+      --Start game here
+      startGame dictionary wordLen guessCount debugMode
     else do -- Bad Arguments -- Tell User they typed something wrong
       putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
-    
-    
+
+startGame dictionary wordLength guessNumber debugMode = do
+    let shortenDic   = shortenDictionary dictionary wordLength
+    playEvilHangman shortenDic wordLength guessNumber debugMode
+    putStrLn "Play again?"
+    restartGame <- getLine  
+    if (restartGame) == "yes" 
+    then do
+      putStrLn "New word length? yes/no"
+      checkNewLength <- hGetLine stdin
+      putStrLn "New number of guesses? yes/no"
+      checkNewGuess <- hGetLine stdin
+      if ((checkNewLength == "yes") && (checkNewGuess == "yes"))
+        then do
+          putStrLn "New length?" 
+          newLength <- getLine
+          putStrLn "New guess?"
+          newGuess <- getLine
+          startGame dictionary (read newLength) (read newGuess) debugMode
+        else do
+          if ((checkNewLength == "no") && (checkNewGuess == "yes"))
+            then do
+              putStrLn "New guess?"
+              newGuess <- getLine
+              startGame dictionary wordLength (read newGuess) debugMode
+           else do
+            if ((checkNewLength == "yes") && (checkNewGuess == "no"))
+                  then do
+                    putStrLn "New length?" 
+                    newLength <- getLine
+                    startGame dictionary (read newLength) guessNumber debugMode
+             else
+               startGame dictionary wordLength guessNumber debugMode
+     else
+       putStrLn "Thanks for playing"
 
 -- Helper Functions: 
 
