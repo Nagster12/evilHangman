@@ -30,7 +30,7 @@ main = do
     let dictionary = words dictContent
     
     -- 2. Check argument Validity
-    let validArgsMsg   = "" --isValidArgs args dictionary
+    let validArgsMsg   = isValidArgs args dictionary
     if (validArgsMsg)  == ""
     
     then do -- Good Arguments from user --Play Evil Hangman!!
@@ -42,7 +42,7 @@ main = do
       playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
      
     else do -- Bad Arguments -- Tell User they typed something wrong
-      putStr $ validArgsMsg ++ "Usage: ./Hangman dictionary name length of word number of guesses\n"
+      putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
     
     
 
@@ -59,8 +59,8 @@ shortenDictionary (x:xs) wordLength
 -- Checks the main program arguments and returns an error message if one of the inputs is not valid
 isValidArgs :: [String] -> [String]-> String
 isValidArgs args dictionary
-  | badWordLen (getWordLen args) dictionary = "Error: A word of that length does not exist in the selected dictionary"
-  | (getGuessCount args) < 1                = "Error: You must select a number of guesses between 1 and 26"
+  | badWordLen (getWordLen args) dictionary = "Error: A word of that length does not exist in the selected dictionary\n"
+  | (getGuessCount args) < 1                = "Error: You must select a number of guesses between 1 and 15\n"
   | otherwise                               = ""
 
 -- checkDebugMode: Returns True if optional "-n" is found
