@@ -21,17 +21,18 @@ import Data.Ord
 playEvilHangman :: [String] -> Int -> Int -> Bool -> IO ()
 playEvilHangman dictionary wordLength guessCount isDebugMode = do
   -- Initial Conditions of variables
+  let upperCaseDictionary = map upperCase dictionary
   let familyPattern = []
   let guessedLetters = []
-  let hangmanWord = makeDashList wordLength
+  let hangmanWord = makeUnderscoreList wordLength
   -- Iterate game state till game is over
   recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
 
 --Function that creates the placeholders for letters based on word length
-makeDashList :: Int -> String
-makeDashList 0 = []
-makeDashList n
-  | n /= 0    = '-':makeDashList (n-1)
+makeUnderscoreList :: Int -> String
+makeUnderscoreList 0 = []
+makeUnderscoreList n
+  | n /= 0    = '_':makeUnderscoreList (n-1)
   | otherwise = []
 
 {-
@@ -57,13 +58,15 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
   -- Request user to guess for a letter
       -- Get user selected letter as inputLetter
   inputLine <- hGetLine stdin
-  let inputLetter = if (inputLine == []) then ' ' else (head inputLine)
-  if (((not.isAlpha) inputLetter) || (elem inputLetter guessedLetters)) -- the user's char has to be an unused letter
+  let inputChar = if (inputLine == []) then ' ' else (head inputLine)
+  if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
   then do -- Get the user to enter a new input
     putStrLn "\nError: Invalid Guess: Please choose a unique letter"
     recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord 
   else do
-    let newGuessedLetters = inputLetter:guessedLetters
+    let inputLetter = toUpper inputChar
+    
+    let newGuessedLetters = addToGuessedLetters inputLetter guessedLetters ['A'..'Z']
     -- Step 6
     -- Update familyPattern
     let newIndices = findAllPatterns dictionary [inputLetter]
@@ -127,3 +130,12 @@ findFamily (x:xs) wordPattern inputLetter
 --Find pattern of guessed letter in current word
 findWordPatterns :: String -> String -> [Int]
 findWordPatterns input letter = findIndices (`elem` letter) input
+
+upperCase :: String -> String
+upperCase [] = []
+upperCase (x:xs) = toUpper x: upperCase xs
+
+addToGuessedLetters :: Char -> String -> String -> String
+addToGuessedLetters inputLetter guessedLetters (alpha:bet)
+  | (alpha == inputLetter) || (elem alpha guessedLetters) = alpha:(addToGuessedLetters inputLetter guessedLetters bet)
+  | otherwise   = ' ':(addToGuessedLetters inputLetter guessedLetters bet)
