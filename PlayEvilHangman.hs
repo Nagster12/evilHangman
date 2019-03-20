@@ -26,13 +26,13 @@ playEvilHangman dictionary wordLength guessCount isDebugMode = do
   let guessedLetters = []
   let hangmanWord = makeUnderscoreList wordLength
   -- Iterate game state till game is over
-  recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
+  recursiveHangman upperCaseDictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
 
 --Function that creates the placeholders for letters based on word length
 makeUnderscoreList :: Int -> String
 makeUnderscoreList 0 = []
 makeUnderscoreList n
-  | n /= 0    = '_':makeUnderscoreList (n-1)
+  | n /= 0    = '_':' ':makeUnderscoreList (n-1)
   | otherwise = []
 
 {-
@@ -96,8 +96,8 @@ makeHangmanWord :: String -> Char -> [Int] -> String
 makeHangmanWord hangmanWord guessedLetter []            = hangmanWord
 makeHangmanWord []          guessedLetter familyPattern = []
 makeHangmanWord (x:xs)      guessedLetter familyPattern
-  | (head familyPattern == 0) = guessedLetter: makeHangmanWord xs guessedLetter (map (\x -> x - 1) (tail familyPattern))
-  | otherwise                 = x:makeHangmanWord xs guessedLetter (map (\x -> x - 1) familyPattern)
+  | (head familyPattern == 0) = guessedLetter:' ': makeHangmanWord xs guessedLetter (map (\x -> x - 1) (tail familyPattern))
+  | otherwise                 = x:' ':makeHangmanWord xs guessedLetter (map (\x -> x - 1) familyPattern)
  
 --Function to check if letter is in current dictionary
 charInDict :: Char -> [String] -> Bool
