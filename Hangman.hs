@@ -40,15 +40,33 @@ main = do
       when ((getGuessCount args) > 15) (putStr "Number of guesses set to maximum of 15\n")
       let guessCount = if ((getGuessCount args) > 15) then 15 else (getGuessCount args)
       playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
-     
+      {-
+      putStrLn "That was fun! Want to play again?"
+      eof <- hIsEOF stdin
+      -- Check for eof
+      if eof 
+        then return ()
+        else do
+          -- Get user selected letter as inputChar
+          inputLine <- hGetLine stdin
+          let inputChar = if (inputLine == []) then ' ' else (head inputLine)
+          if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
+            then do -- Get the user to enter a new input
+            putStrLn "\nError: Invalid Guess: Please choose a unique letter"
+        -}
+        
+        
+        
+      
+      
+      
+      
     else do -- Bad Arguments -- Tell User they typed something wrong
       putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
     
     
 
 -- Helper Functions: 
-
-
 --Create a list of words from dictionary with specified length
 shortenDictionary :: [String] -> Int -> [String]
 shortenDictionary [] wordLength = []
