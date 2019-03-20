@@ -10,22 +10,38 @@ import Control.Monad (when)
 import Data.List
 import Data.Ord
 
--- playEvilHangman: The game begins! with the user selected options we will play evil hangman
+{-
+
+	playEvilHangman: The game begins! with the user selected options
+			 we will play evil hangman
+	Inputs: Dictionary, guessed word length, number of guesses, check
+			if we print out length of dictionary
+
+-}
 playEvilHangman :: [String] -> Int -> Int -> Bool -> IO ()
 playEvilHangman dictionary wordLength guessCount isDebugMode = do
   -- Initial Conditions of variables
-  let familyPattern = [1,3]
+  let familyPattern = []
   let guessedLetters = []
   let hangmanWord = makeDashList wordLength
   -- Iterate game state till game is over
   recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord
-  
+
+--Function that creates the placeholders for letters based on word length
 makeDashList :: Int -> String
 makeDashList 0 = []
 makeDashList n
   | n /= 0    = '-':makeDashList (n-1)
   | otherwise = []
-  
+
+{-
+	Function that runs the game
+	Inputs: Dictionary, length of the word, number of guesses,
+		checks if we print family size, the current guessed
+		letters, the current family pattern
+	Outputs:
+		Prints needed data to the console
+-}
 recursiveHangman :: [String] -> Int -> Int -> Bool -> [Char] -> [Int] -> String -> IO ()
 recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord = do
   -- Show user current Game State Info
@@ -39,27 +55,28 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
   when isDebugMode (putStrLn $ "Number of possible words: " ++ show (length dictionary)) -- only prints if in debug mode: "-n"
   -- step 5:
   -- Request user to guess for a letter
-      -- Get user selected letter as inputChar
+      -- Get user selected letter as inputLetter
   inputLine <- hGetLine stdin
-  let inputChar = if (inputLine == []) then ' ' else (head inputLine)
-  if (((not.isAlpha) inputChar) || (elem inputChar guessedLetters)) -- the user's char has to be an unused letter
+  let inputLetter = if (inputLine == []) then ' ' else (head inputLine)
+  if (((not.isAlpha) inputLetter) || (elem inputLetter guessedLetters)) -- the user's char has to be an unused letter
   then do -- Get the user to enter a new input
     putStrLn "\nError: Invalid Guess: Please choose a unique letter"
     recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord 
   else do
-    let newGuessedLetters = inputChar:guessedLetters
+    let newGuessedLetters = inputLetter:guessedLetters
     -- Step 6
     -- Update familyPattern
-    let newIndices = findAllIndices dictionary [inputChar]
+    let newIndices = findAllPatterns dictionary [inputLetter]
     let newFamilyPattern = findCommon newIndices
     -- Step 7
-    -- Partion dictionary with the inputChar --Creates a newDict *important for step 9*
-    let newDict = findFamily dictionary newFamilyPattern [inputChar]
+    -- Partion dictionary with the inputLetter --Creates a newDict *important for step 9*
+    let newDict = findFamily dictionary newFamilyPattern [inputLetter]
     -- step 8 update guessCount when input char is not in the dictionary
-    let newGuessCount = if (not (charInDict inputChar newDict))
+    --		update the hangman word to print
+    let newGuessCount = if (not (charInDict inputLetter newDict))
                         then guessCount - 1
                         else guessCount
-    let newHangmanWord = makeHangmanWord hangmanWord inputChar newFamilyPattern
+    let newHangmanWord = makeHangmanWord hangmanWord inputLetter newFamilyPattern
     -- step 9 Check if end of game
     if (length dictionary == 1) && not(elem '-' newHangmanWord) then (putStrLn ("You win! The word was: " ++ newHangmanWord))
     else do
@@ -71,25 +88,15 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
        else recursiveHangman newDict wordLength newGuessCount isDebugMode newGuessedLetters newFamilyPattern newHangmanWord
 
 -- Helper Functions:
---makeHangmanWord: arguments - hangmanWord inputChar familyPattern
+--makeHangmanWord: arguments - hangmanWord inputLetter familyPattern
 makeHangmanWord :: String -> Char -> [Int] -> String
 makeHangmanWord hangmanWord guessedLetter []            = hangmanWord
 makeHangmanWord []          guessedLetter familyPattern = []
 makeHangmanWord (x:xs)      guessedLetter familyPattern
   | (head familyPattern == 0) = guessedLetter: makeHangmanWord xs guessedLetter (map (\x -> x - 1) (tail familyPattern))
   | otherwise                 = x:makeHangmanWord xs guessedLetter (map (\x -> x - 1) familyPattern)
-  
-removeFirstLetters :: [String] -> [String]
-removeFirstLetters ((y:ys):xs) = [str| str <- ys]:removeFirstLetters xs
-
--- currDictFamilyCount (I think it is finished)
-currFamilyPatternCount :: [Int] -> Int
-currFamilyPatternCount currPattern = length currPattern
-
-debugPrint :: Int -> Bool -> IO ()
-debugPrint patternCount isDebugMode = do
-  if isDebugMode then putStrLn (show patternCount) else (return ())
-  
+ 
+--Function to check if letter is in current dictionary
 charInDict :: Char -> [String] -> Bool
 charInDict _ [] = False
 charInDict char (x:xs) 
@@ -97,25 +104,26 @@ charInDict char (x:xs)
   | otherwise   = charInDict char xs 
 
 --Function to find the most common index
+findCommon :: [[Int]] -> [Int] 
 findCommon xs = head . maximumBy (comparing length) . group . sort $ xs
 
 {-
-	Finds all indecies of character in current dictionary/family
-	Inputs the current family/dictionary and the letter of interest
-	Outputs a list of all the indices in
-    the family
+	Finds all patterns of character in current dictionary/family
+	Inputs: the current family/dictionary and the letter of interest
+	Outputs: a list of all the patterns in the family
+
 -}
-findAllIndices :: [String] -> String -> [[Int]]
-findAllIndices [] inputLetter = []
-findAllIndices (x:xs) inputLetter = (findWordIndices x inputLetter) : findAllIndices xs inputLetter
+findAllPatterns :: [String] -> String -> [[Int]]
+findAllPatterns [] inputLetter = []
+findAllPatterns (x:xs) inputLetter = (findWordPatterns x inputLetter) : findAllPatterns xs inputLetter
 
---Finds the words that belong to a family based on indecies
+--Finds the words that belong to a family based on patterns
 findFamily :: [String] -> [Int] -> String -> [String]
-findFamily [] wordIndices inputLetter = []
-findFamily (x:xs) wordIndices inputLetter
-   | (findWordIndices x inputLetter) == wordIndices = x : findFamily xs wordIndices inputLetter
-   | otherwise = findFamily xs wordIndices inputLetter
+findFamily [] wordPattern inputLetter = []
+findFamily (x:xs) wordPattern inputLetter
+   | (findWordPatterns x inputLetter) == wordPattern = x : findFamily xs wordPattern inputLetter
+   | otherwise = findFamily xs wordPattern inputLetter
 
---Find indices of guessed letter in current word
-findWordIndices :: String -> String -> [Int]
-findWordIndices input letter = findIndices (`elem` letter) input
+--Find pattern of guessed letter in current word
+findWordPatterns :: String -> String -> [Int]
+findWordPatterns input letter = findIndices (`elem` letter) input

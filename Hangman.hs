@@ -2,6 +2,7 @@
 -- CS231 02L Lab8
 -- Main.hs
 module Main where
+import System.Exit
 import System.Environment
 import System.Directory
 import System.IO
@@ -18,6 +19,13 @@ main = do
   -- Process: Check arguments, and if all input is good, play evilHangman in the proper mode
   -- 1. Open Dictionary
   args <- getArgs
+  if ((length args) > 4 || (length args) < 3)
+  then do
+    putStrLn "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
+    exitSuccess
+  else
+    return ()
+
   fileExists <- doesFileExist $ getFileName args
   if (not fileExists)
   
@@ -32,23 +40,31 @@ main = do
     -- 2. Check argument Validity
     let validArgsMsg   = isValidArgs args dictionary
     if (validArgsMsg)  == ""
-    
     then do -- Good Arguments from user --Play Evil Hangman!!
       let wordLen      = getWordLen args
       --let shortenDic   = shortenDictionary dictionary wordLen
       let debugMode = checkDebugMode args
       when ((getGuessCount args) > 15) (putStr "Number of guesses set to maximum of 15\n")
       let guessCount = if ((getGuessCount args) > 15) then 15 else (getGuessCount args)
-      --playEvilHangman shortenDic wordLen guessCount debugMode --Play Evil Hangman!
       --Start game here
       startGame dictionary wordLen guessCount debugMode
     else do -- Bad Arguments -- Tell User they typed something wrong
       putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
 
+{-
+
+	Function that runs the game, and checks if the user wants to
+		play multiple games, and with differing values for
+		word length and number of guesses
+	Input: original dictionary file, length of word, number of 
+		guesses, check if we need to print dictionary length
+	
+
+-}
 startGame dictionary wordLength guessNumber debugMode = do
     let shortenDic   = shortenDictionary dictionary wordLength
     playEvilHangman shortenDic wordLength guessNumber debugMode
-    putStrLn "Play again?"
+    putStrLn "Play again? yes/no"
     restartGame <- getLine  
     if (restartGame) == "yes" 
     then do
@@ -62,23 +78,44 @@ startGame dictionary wordLength guessNumber debugMode = do
           newLength <- getLine
           putStrLn "New guess?"
           newGuess <- getLine
-          startGame dictionary (read newLength) (read newGuess) debugMode
+          let newArgs = ["", newLength, newGuess]
+          let validArgsMsg   = isValidArgs newArgs dictionary
+          if (validArgsMsg)  == ""
+           then do 
+            when ((getGuessCount newArgs) > 15) (putStr "Number of guesses set to maximum of 15\n")
+            let newGuessCount = if ((getGuessCount newArgs) > 15) then 15 else (getGuessCount newArgs)
+            startGame dictionary (read newLength) newGuessCount debugMode
+          else do 
+            putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
         else do
           if ((checkNewLength == "no") && (checkNewGuess == "yes"))
             then do
               putStrLn "New guess?"
               newGuess <- getLine
-              startGame dictionary wordLength (read newGuess) debugMode
+              let newArgs = ["", show wordLength, newGuess]
+              let validArgsMsg   = isValidArgs newArgs dictionary
+              if (validArgsMsg)  == ""
+               then do 
+                 when ((getGuessCount newArgs) > 15) (putStr "Number of guesses set to maximum of 15\n")
+                 let newGuessCount = if ((getGuessCount newArgs) > 15) then 15 else (getGuessCount newArgs)
+                 startGame dictionary wordLength newGuessCount debugMode
+              else do 
+                 putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
            else do
             if ((checkNewLength == "yes") && (checkNewGuess == "no"))
                   then do
                     putStrLn "New length?" 
                     newLength <- getLine
-                    startGame dictionary (read newLength) guessNumber debugMode
+                    let newArgs = ["", newLength, show guessNumber]
+                    let validArgsMsg   = isValidArgs newArgs dictionary
+                    if (validArgsMsg)  == ""
+                     then do startGame dictionary (read newLength) guessNumber debugMode
+                    else do
+                      putStr $ validArgsMsg ++ "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
              else
                startGame dictionary wordLength guessNumber debugMode
      else
-       putStrLn "Thanks for playing"
+       putStrLn "Thanks for playing!"
 
 -- Helper Functions: 
 
@@ -131,4 +168,12 @@ getWordLen (x:wordLen:xs) = read wordLen
 
 -- getGuessCount: Parses GuessCount from user's input arguments
 getGuessCount :: [String] -> Int
-getGuessCount (x:y:guessCount:xs) = read guessCount
+getGuessCount (x:y:guessCount:xs)
+  | (isADigit guessCount) = read guessCount
+  | otherwise = 0
+
+isADigit :: String -> Bool
+isADigit [] = True
+isADigit (x:xs)
+  | isDigit x = isADigit xs
+  | otherwise = False
