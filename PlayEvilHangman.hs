@@ -81,7 +81,7 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
                         else guessCount
     let newHangmanWord = makeHangmanWord hangmanWord inputLetter newFamilyPattern
     -- step 9 Check if end of game
-    if (length dictionary == 1) && not(elem '-' newHangmanWord) then (putStrLn ("You win! The word was: " ++ newHangmanWord))
+    if (length dictionary == 1) && not(elem '_' newHangmanWord) then (putStrLn ("You win! The word was: " ++ newHangmanWord))
     else do
       if (newGuessCount == 0)
        then do
@@ -136,6 +136,7 @@ upperCase [] = []
 upperCase (x:xs) = toUpper x: upperCase xs
 
 addToGuessedLetters :: Char -> String -> String -> String
+addToGuessedLetters inputLetter guessedLetters [] = []
 addToGuessedLetters inputLetter guessedLetters (alpha:bet)
   | (alpha == inputLetter) || (elem alpha guessedLetters) = alpha:(addToGuessedLetters inputLetter guessedLetters bet)
   | otherwise   = ' ':(addToGuessedLetters inputLetter guessedLetters bet)
