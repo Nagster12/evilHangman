@@ -32,7 +32,7 @@ playEvilHangman dictionary wordLength guessCount isDebugMode = do
 makeUnderscoreList :: Int -> String
 makeUnderscoreList 0 = []
 makeUnderscoreList n
-  | n /= 0    = '_':' ':makeUnderscoreList (n-1)
+  | n /= 0    = '_':makeUnderscoreList (n-1)
   | otherwise = []
 
 {-
@@ -49,9 +49,9 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
    -- step 1
   putStrLn ("Guesses Left: " ++ show guessCount)
   -- step 2
-  putStrLn ("Letters Guessed: " ++ show guessedLetters)
+  putStrLn ("Letters Guessed: " ++ guessedLetters)
   -- step 3
-  putStrLn ("Word so far: " ++ show hangmanWord)
+  putStrLn ("Word so far: " ++ intersperse ' ' hangmanWord)
   -- step 4
   when isDebugMode (putStrLn $ "Number of possible words: " ++ show (length dictionary)) -- only prints if in debug mode: "-n"
   -- step 5:
@@ -96,8 +96,8 @@ makeHangmanWord :: String -> Char -> [Int] -> String
 makeHangmanWord hangmanWord guessedLetter []            = hangmanWord
 makeHangmanWord []          guessedLetter familyPattern = []
 makeHangmanWord (x:xs)      guessedLetter familyPattern
-  | (head familyPattern == 0) = guessedLetter:' ': makeHangmanWord xs guessedLetter (map (\x -> x - 1) (tail familyPattern))
-  | otherwise                 = x:' ':makeHangmanWord xs guessedLetter (map (\x -> x - 1) familyPattern)
+  | (head familyPattern == 0) = guessedLetter: makeHangmanWord xs guessedLetter (map (\x -> x - 1) (tail familyPattern))
+  | otherwise                 = x:makeHangmanWord xs guessedLetter (map (\x -> x - 1) familyPattern)
  
 --Function to check if letter is in current dictionary
 charInDict :: Char -> [String] -> Bool
