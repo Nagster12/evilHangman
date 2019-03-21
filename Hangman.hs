@@ -19,6 +19,7 @@ main = do
   -- Process: Check arguments, and if all input is good, play evilHangman in the proper mode
   -- 1. Open Dictionary
   args <- getArgs
+  --Check if the number of arguments
   if ((length args) > 4 || (length args) < 3)
   then do
     putStrLn "Usage: ./Hangman -dictionary name- -length of word- -number of guesses-\n"
@@ -164,7 +165,9 @@ getFileName (fileName:xs) = fileName
 
 -- getWordLen: Parses WordLen from user's input arguments
 getWordLen :: [String] -> Int
-getWordLen (x:wordLen:xs) = read wordLen
+getWordLen (x:wordLen:xs)
+  | (isADigit wordLen) = read wordLen
+  | otherwise = 0
 
 -- getGuessCount: Parses GuessCount from user's input arguments
 getGuessCount :: [String] -> Int
@@ -172,6 +175,7 @@ getGuessCount (x:y:guessCount:xs)
   | (isADigit guessCount) = read guessCount
   | otherwise = 0
 
+--Function to check if an input character can be a digit
 isADigit :: String -> Bool
 isADigit [] = True
 isADigit (x:xs)
