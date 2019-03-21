@@ -65,7 +65,6 @@ recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters fam
     recursiveHangman dictionary wordLength guessCount isDebugMode guessedLetters familyPattern hangmanWord 
   else do
     let inputLetter = toUpper inputChar
-    
     let newGuessedLetters = addToGuessedLetters inputLetter guessedLetters ['A'..'Z']
     -- Step 6
     -- Update familyPattern
@@ -131,10 +130,12 @@ findFamily (x:xs) wordPattern inputLetter
 findWordPatterns :: String -> String -> [Int]
 findWordPatterns input letter = findIndices (`elem` letter) input
 
+--Function to make the dictionary all uppercase
 upperCase :: String -> String
 upperCase [] = []
 upperCase (x:xs) = toUpper x: upperCase xs
 
+--Function to add a guessed letter to the current guessed letters
 addToGuessedLetters :: Char -> String -> String -> String
 addToGuessedLetters inputLetter guessedLetters [] = []
 addToGuessedLetters inputLetter guessedLetters (alpha:bet)
